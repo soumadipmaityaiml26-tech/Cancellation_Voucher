@@ -16,7 +16,7 @@ interface Props {
   open: boolean;
   setOpen: (value: boolean) => void;
   invoice: INVOICE;
-  onRefresh: () => void; // 🔥 new
+  onRefresh: () => void;
 }
 
 export default function CancelInvoiceDialog({
@@ -31,6 +31,7 @@ export default function CancelInvoiceDialog({
   const [remaining, setRemaining] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+
   const [paymentMode, setPaymentMode] = useState<
     "Cash" | "UPI" | "Bank Transfer" | "Cheque" | "Others" | "Demand Draft"
   >("Cash");
@@ -51,15 +52,28 @@ export default function CancelInvoiceDialog({
     setRemaining(safeRemaining);
   }, [cancellationCharge, refund, invoice.advance]);
 
-  /* ================= SUBMIT (UI ONLY) ================= */
+  /* ================= SUBMIT ================= */
 
   const handleCancel = async () => {
     try {
+      // ❌ REFUND VALIDATION
+      if (refund > netReturn) {
+        toast.error(
+          "Refund amount should be less than or equal to Net Return"
+        );
+        return;
+      }
+
+      // ❌ CHEQUE VALIDATION
       if (paymentMode === "Cheque") {
-        if (!bankName.trim() || !chequeNumber.trim()) {
-          toast.error(
-            "Bank name and cheque number are required for cheque payments"
-          );
+        if (!bankName.trim()) {
+          toast.error("Bank name is required for cheque payments");
+          return;
+        }
+
+        const chequeRegex = /^\d{6}$/;
+        if (!chequeRegex.test(chequeNumber)) {
+          toast.error("Cheque number should be exactly 6 digits");
           return;
         }
       }
@@ -86,8 +100,7 @@ export default function CancelInvoiceDialog({
 
       setOpen(false);
       setSuccessOpen(true);
-
-      onRefresh(); // 🔥 Reload invoices
+      onRefresh();
     } catch (err: any) {
       console.error("Cancel Invoice Error:", err);
       toast.error(err.message || "Failed to cancel invoice");
@@ -100,7 +113,6 @@ export default function CancelInvoiceDialog({
 
   return (
     <>
-      {/* ================= CANCEL INVOICE DIALOG ================= */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -112,7 +124,6 @@ export default function CancelInvoiceDialog({
               Invoice ID: <b>{invoice._id}</b>
             </p>
 
-            {/* Advance */}
             <div>
               <label className="text-sm font-medium">Advance Paid</label>
               <Input
@@ -122,7 +133,6 @@ export default function CancelInvoiceDialog({
               />
             </div>
 
-            {/* Cancellation Charge */}
             <div>
               <label className="text-sm font-medium">Cancellation Charge</label>
               <Input
@@ -133,7 +143,6 @@ export default function CancelInvoiceDialog({
               />
             </div>
 
-            {/* Net Return */}
             <div>
               <label className="text-sm font-medium">Net Return (Auto)</label>
               <Input
@@ -143,7 +152,6 @@ export default function CancelInvoiceDialog({
               />
             </div>
 
-            {/* Refund */}
             <div>
               <label className="text-sm font-medium">Refund Amount</label>
               <Input
@@ -154,7 +162,6 @@ export default function CancelInvoiceDialog({
               />
             </div>
 
-            {/* Remaining */}
             <div>
               <label className="text-sm font-medium">Remaining (Auto)</label>
               <Input
@@ -163,7 +170,7 @@ export default function CancelInvoiceDialog({
                 className="bg-muted cursor-not-allowed"
               />
             </div>
-            {/* Payment Mode */}
+
             <div>
               <label className="text-sm font-medium">Refund Mode</label>
               <select
@@ -180,7 +187,6 @@ export default function CancelInvoiceDialog({
               </select>
             </div>
 
-            {/* Bank + Cheque (only if cheque) */}
             {paymentMode === "Cheque" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -196,8 +202,11 @@ export default function CancelInvoiceDialog({
                   <label className="text-sm font-medium">Cheque Number</label>
                   <Input
                     value={chequeNumber}
-                    onChange={(e) => setChequeNumber(e.target.value)}
-                    placeholder="Enter cheque number"
+                    onChange={(e) =>
+                      setChequeNumber(e.target.value.replace(/\D/g, ""))
+                    }
+                    placeholder="6 digit cheque number"
+                    maxLength={6}
                   />
                 </div>
               </div>
@@ -215,11 +224,9 @@ export default function CancelInvoiceDialog({
         </DialogContent>
       </Dialog>
 
-      {/* ================= SUCCESS POPUP ================= */}
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
         <DialogContent className="text-center space-y-4">
           <CheckCircle className="mx-auto h-12 w-12 text-green-600" />
-
           <DialogHeader>
             <DialogTitle>Cancellation Successful</DialogTitle>
           </DialogHeader>

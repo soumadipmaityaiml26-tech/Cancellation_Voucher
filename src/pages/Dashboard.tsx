@@ -4,6 +4,7 @@ import Analytics from "./Analytics";
 import Invoices from "./Cancellations";
 import Manage from "./Manage";
 import AddInvoice from "./AddCancellations";
+import UserVouchers from "./userVouchers";
 
 import Payments from "./Payments";
 
@@ -15,6 +16,7 @@ export default function Dashboard() {
     <div className="p-4">
       {page === "analytics" && role === "admin" && <Analytics />}
       {page === "voucher" && role === "admin" && <Invoices />}
+      {page === "voucher" && role === "user" && <UserVouchers />}
       {page === "manage" && role === "admin" && <Manage />}
       {page === "payments" && role === "admin" && <Payments />}
       {page === "addVoucher" && <AddInvoice />}

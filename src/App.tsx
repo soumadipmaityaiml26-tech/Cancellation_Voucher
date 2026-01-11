@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VoucherRoute from "./pages/VoucherRoute";
 
 function App() {
   return (
@@ -11,6 +12,15 @@ function App() {
       <Routes>
         {/* Login Route */}
         <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/voucher/:cancellationId"
+          element={
+            <ProtectedRoute>
+              <VoucherRoute />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Dashboard Route (Protected) */}
         <Route

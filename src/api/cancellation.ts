@@ -85,3 +85,18 @@ export const updateVoucher = async (
 
   return res.data;
 };
+
+export const getLatestCancellationsPerUser = async () => {
+  const token = localStorage.getItem("authToken");
+
+  const res = await api.get<IGetLatestCancellationResponse>(
+    `/cancellation/my-voucher`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return res.data;
+};

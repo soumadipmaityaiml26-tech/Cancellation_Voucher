@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Download, Pencil, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,16 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { Label } from "@/components/ui/label";
 import type {
   CANCELLATION,
@@ -35,10 +26,9 @@ import type {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  getLatestCancellations,
   getCancellationHistory,
-  deleteVoucher,
   updateVoucher,
+  getLatestCancellationsPerUser,
 } from "@/api/cancellation";
 
 /* ================= UTILS ================= */
@@ -46,7 +36,7 @@ const getDate = (iso: string) => iso.split("T")[0];
 const getTime = (iso: string) => iso.split("T")[1].slice(0, 5);
 
 /* ================= COMPONENT ================= */
-export default function Invoices() {
+export default function UserVouchers() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
@@ -74,13 +64,10 @@ export default function Invoices() {
   const [chequeError, setChequeError] = useState("");
   const [bankError, setBankError] = useState("");
 
-  /* ===== Delete ===== */
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
-
   /* ================= FETCH ================= */
   const fetchVouchers = async () => {
-    const data: IGetLatestCancellationResponse = await getLatestCancellations();
+    const data: IGetLatestCancellationResponse =
+      await getLatestCancellationsPerUser();
     setVouchers(data.data);
   };
   const fetchHistory = async (id: string) => {
@@ -174,23 +161,6 @@ export default function Invoices() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!invoiceToDelete) return;
-
-    try {
-      await deleteVoucher(invoiceToDelete);
-      toast.success("Voucher deleted successfully");
-
-      setVouchers((prev) => prev.filter((inv) => inv._id !== invoiceToDelete));
-      await fetchVouchers();
-    } catch (err: any) {
-      toast.error(err?.message || "Delete failed");
-    } finally {
-      setDeleteOpen(false);
-      setInvoiceToDelete(null);
-    }
-  };
-
   /* ================= UI ================= */
   return (
     <div className="space-y-6">
@@ -271,17 +241,6 @@ export default function Invoices() {
                   <Button size="sm" onClick={() => handleEditClick(can)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      setInvoiceToDelete(can.inv_id);
-                      setDeleteOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -335,7 +294,7 @@ export default function Invoices() {
             </div>
 
             {/* Actions */}
-            <div className="grid grid-cols-4 gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -359,44 +318,10 @@ export default function Invoices() {
               <Button size="sm" onClick={() => handleEditClick(can)}>
                 <Pencil className="h-4 w-4" />
               </Button>
-
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => {
-                  setInvoiceToDelete(can.inv_id);
-                  setDeleteOpen(true);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         ))}
       </div>
-
-      {/* ================= DELETE CONFIRMATION ================= */}
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The invoice and all related payments
-              will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleDeleteConfirm}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* ================= EDIT PAYMENT MODAL ================= */}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -540,11 +465,11 @@ export default function Invoices() {
                         <Button
                           size="sm"
                           variant="outline"
-                          // onClick={() =>
-                          //   navigate(`/invoice/${inv._id}`, {
-                          //     state: { invoice: inv },
-                          //   })
-                          // }
+                          onClick={() =>
+                            navigate(`/voucher/${can._id}`, {
+                              state: { cancellation: can },
+                            })
+                          }
                         >
                           <Download className="h-4 w-4" />
                         </Button>

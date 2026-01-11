@@ -35,6 +35,25 @@ export interface CANCELLATION {
   status: "CANCELLED";
   version: number;
   createdAt: string;
+  paid: number;
+
+  charges: {
+    parking: number;
+    amenities: number;
+    otherCharges: number;
+  };
+
+  payment: {
+    mode:
+      | "Cash"
+      | "UPI"
+      | "Bank Transfer"
+      | "Cheque"
+      | "Others"
+      | "Demand Draft";
+    bankName: string | null;
+    chequeNumber: string | null;
+  };
 }
 
 export interface ICreateCancellationResponse {

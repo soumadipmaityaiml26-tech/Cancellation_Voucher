@@ -7,25 +7,52 @@ import type { INVOICE } from "@/types/invoicsTypes";
 interface Props {
   invoice: INVOICE;
   onRefresh: () => void;
+  showPan?: boolean;
 }
 
-export default function InvoiceCard({ invoice, onRefresh }: Props) {
+/* ================= Utils ================= */
+const formatMoney = (n: number) =>
+  `₹ ${n.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+export default function InvoiceCard({ invoice, onRefresh, showPan }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Card className="shadow-md hover:shadow-xl transition">
-        <CardHeader>
+      <Card className="shadow-md hover:shadow-xl transition rounded-xl">
+        <CardHeader className="pb-2">
           <h2 className="font-semibold text-lg">{invoice.customer.name}</h2>
+
           <p className="text-sm text-muted-foreground">
             {invoice.customer.phone}
           </p>
+
+          {showPan && (
+            <p className="text-xs text-muted-foreground">
+              PAN: {invoice.customer.PAN}
+            </p>
+          )}
         </CardHeader>
 
-        <CardContent className="space-y-2">
-          <p>Total: ₹{invoice.totalAmount}</p>
-          <p>Paid: ₹{invoice.advance}</p>
-          <p>Remaining: ₹{invoice.remainingAmount}</p>
+        <CardContent className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Total</span>
+            <span className="font-medium">
+              {formatMoney(invoice.totalAmount)}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-green-600">
+            <span>Paid</span>
+            <span className="font-medium">{formatMoney(invoice.advance)}</span>
+          </div>
+
+          <div className="flex justify-between text-red-600">
+            <span>Remaining</span>
+            <span className="font-medium">
+              {formatMoney(invoice.remainingAmount)}
+            </span>
+          </div>
 
           <Button
             variant="destructive"
